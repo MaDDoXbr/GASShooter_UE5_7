@@ -22,7 +22,7 @@ AGSWeapon::AGSWeapon()
 
 	bReplicates = true;
 	bNetUseOwnerRelevancy = true;
-	NetUpdateFrequency = 100.0f; // Set this to a value that's appropriate for your game
+	// NetUpdateFrequency = 100.0f; // Set this to a value that's appropriate for your game //Deprecated. SetNetUpdateFrequency is used below
 	bSpawnWithCollision = true;
 	PrimaryClipAmmo = 0;
 	MaxPrimaryClipAmmo = 0;
@@ -67,6 +67,8 @@ AGSWeapon::AGSWeapon()
 
 	RestrictedPickupTags.AddTag(FGameplayTag::RequestGameplayTag("State.Dead"));
 	RestrictedPickupTags.AddTag(FGameplayTag::RequestGameplayTag("State.KnockedDown"));
+
+	SetNetUpdateFrequency(100.0f);
 }
 
 UAbilitySystemComponent* AGSWeapon::GetAbilitySystemComponent() const
@@ -217,7 +219,10 @@ void AGSWeapon::AddAbilities()
 
 	if (!ASC)
 	{
-		UE_LOG(LogTemp, Error, TEXT("%s %s Role: %s ASC is null"), *FString(__FUNCTION__), *GetName(), GET_ACTOR_ROLE_FSTRING(OwningCharacter));
+		// We use GetValueAsString to safely convert the Enum to a readable string
+		FString RoleString = StaticEnum<ENetRole>()->GetValueAsString(OwningCharacter->GetLocalRole());
+		
+		UE_LOG(LogTemp, Error, TEXT("%s %s Role: %s ASC is null"), *FString(__FUNCTION__), *GetName(), *RoleString);
 		return;
 	}
 

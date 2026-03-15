@@ -6,22 +6,32 @@
 FString UGSBlueprintFunctionLibrary::GetPlayerEditorWindowRole(UWorld* World)
 {
 	FString Prefix;
-	if (World)
+	if (World && World->WorldType == EWorldType::PIE)
 	{
-		if (World->WorldType == EWorldType::PIE)
+		switch (World->GetNetMode())
 		{
-			switch (World->GetNetMode())
+		case NM_Client:
 			{
-			case NM_Client:
-				Prefix = FString::Printf(TEXT("Client %d "), GPlayInEditorID - 1);
-				break;
-			case NM_DedicatedServer:
-			case NM_ListenServer:
-				Prefix = FString::Printf(TEXT("Server "));
-				break;
-			case NM_Standalone:
-				break;
+				// Access the PIE ID via the World's Context instead of the global variable
+				int32 PIEInstanceID = 0;
+				if (FWorldContext* Context = GEngine->GetWorldContextFromWorld(World))
+				{
+					PIEInstanceID = Context->PIEInstance;
+				}
+
+				Prefix = FString::Printf(TEXT("Client %d "), PIEInstanceID - 1);
 			}
+			break;
+
+		case NM_DedicatedServer:
+		case NM_ListenServer:
+			Prefix = TEXT("Server ");
+			break;
+
+		case NM_Standalone:
+		case NM_MAX: // Explicitly handle the "Max" value to satisfy some compilers
+		default:     // Catch-all to stop the "enumeration not covered" warning
+			break;
 		}
 	}
 
